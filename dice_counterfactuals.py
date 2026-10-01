@@ -253,7 +253,7 @@ print("=" * 80)
 # Select high-risk customers
 high_risk_customers = test_data[test_data['Churn_Probability'] > 0.7].head(3)
 
-print(f"\n📊 Generating counterfactuals for {len(high_risk_customers)} high-risk customers...")
+print(f"\nGenerating counterfactuals for {len(high_risk_customers)} high-risk customers...")
 
 sample_counterfactuals = []
 
@@ -301,12 +301,12 @@ for idx, row in high_risk_customers.iterrows():
         
         # Check if counterfactuals were found
         if cf_examples.final_cfs_df is None or len(cf_examples.final_cfs_df) == 0:
-            print("\n⚠️  No valid counterfactuals found for this customer")
+            print("\nNo valid counterfactuals found for this customer")
             continue
         
         cf_df = cf_examples.final_cfs_df
         
-        print("\n✅ RETENTION STRATEGY OPTIONS:")
+        print("\nRETENTION STRATEGY OPTIONS:")
         print(f"   Found {len(cf_df)} counterfactual scenarios\n")
         
         # Iterate through counterfactuals (usually 3)
@@ -338,12 +338,12 @@ for idx, row in high_risk_customers.iterrows():
                     
                     # Format based on feature type
                     if 'premium' in feat.lower() or 'curr_ann_amt' in feat.lower():
-                        print(f"  💰 {feat}:")
+                        print(f"  {feat}:")
                         print(f"     Original: ${orig_val:.2f}")
                         print(f"     New:      ${new_val:.2f}")
                         print(f"     Change:   {pct_change:+.1f}%")
                     elif 'ratio' in feat.lower() or 'affordability' in feat.lower():
-                        print(f"  📊 {feat}:")
+                        print(f"  {feat}:")
                         print(f"     Original: {orig_val:.4f}")
                         print(f"     New:      {new_val:.4f}")
                         print(f"     Change:   {pct_change:+.1f}%")
@@ -354,7 +354,7 @@ for idx, row in high_risk_customers.iterrows():
                         print(f"     Change:   {pct_change:+.1f}%")
             
             if not has_changes:
-                print("  ⚠️  No significant changes in actionable features")
+                print("  No significant changes in actionable features")
             
             option_num += 1
         
@@ -370,7 +370,7 @@ for idx, row in high_risk_customers.iterrows():
         print(f"\nSuccessfully generated counterfactuals")
         
     except Exception as e:
-        print(f"\n⚠️  Could not generate counterfactuals: {str(e)}")
+        print(f"\nCould not generate counterfactuals: {str(e)}")
         continue
 
 # Save sample counterfactuals
@@ -386,17 +386,17 @@ print("\n" + "=" * 80)
 print("DiCE SETUP COMPLETE!")
 print("=" * 80)
 
-print("\n📊 Configuration:")
+print("\nConfiguration:")
 print(f"  - Actionable features: {len(ACTIONABLE_FEATURES)}")
 print(f"  - Immutable features: {len(IMMUTABLE_FEATURES)}")
 print(f"  - Sample counterfactuals: {len(sample_counterfactuals)}")
 
-print("\n📁 Files created:")
+print("\nFiles created:")
 print("  1. dice_explainer.pkl")
 print("  2. sample_counterfactuals.pkl")
 
-print("\n✅ Ready for dashboard integration!")
-print("\n💡 DiCE will generate:")
+print("\nReady for dashboard integration!")
+print("\nDiCE will generate:")
 print("   - Minimal changes needed to reduce churn")
 print("   - Multiple diverse retention strategies")
 print("   - Only actionable features (premium discounts)")

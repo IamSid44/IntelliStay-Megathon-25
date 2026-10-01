@@ -1,2 +1,14 @@
-megathon
-__pycache__
+# Virtual environments
+megathon/
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# Large generated artifacts (download links in README)
+*.pkl
+autoinsurance_churn*.csv
+test_data_with_predictions.csv
+shap_global_importance.csv

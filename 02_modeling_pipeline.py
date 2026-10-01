@@ -1,7 +1,6 @@
 """
-Machine Learning Pipeline for Churn Prediction (GPU-OPTIMIZED)
-Includes: Data Preprocessing, SMOTE, Model Training
-Optimized for NVIDIA RTX 4060
+Machine Learning Pipeline for Churn Prediction
+Includes: Data Preprocessing, SMOTE, XGBoost Training (GPU if available, else CPU)
 """
 
 import pandas as pd
@@ -32,18 +31,21 @@ print(f"\nXGBoost version: {xgb.__version__}")
 
 # Check for GPU availability
 try:
-    # Try to get GPU info
+    # Probe CUDA with a tiny fit; XGBoost only raises once training starts
+    xgb.XGBClassifier(device='cuda', tree_method='hist', n_estimators=1).fit(
+        np.random.rand(20, 3), np.random.randint(0, 2, 20)
+    )
     gpu_available = True
     device = 'cuda'
     tree_method = 'hist'
-    print(f"✓ GPU training enabled!")
+    print("GPU training enabled")
     print(f"  Device: {device}")
     print(f"  Tree method: {tree_method} (GPU-accelerated)")
 except Exception as e:
     gpu_available = False
     device = 'cpu'
     tree_method = 'hist'
-    print(f"⚠️  GPU not available, using CPU")
+    print("GPU not available, using CPU")
     print(f"  Reason: {str(e)}")
 
 # ============================================================================
@@ -85,7 +87,7 @@ for col in numerical_cols:
     if df_model[col].isnull().sum() > 0:
         median_val = df_model[col].median()
         df_model[col].fillna(median_val, inplace=True)
-        print(f"  ✓ Filled {col} with median: {median_val:.2f}")
+        print(f"  Filled {col} with median: {median_val:.2f}")
 
 # Fill categorical missing values with mode
 categorical_cols = df_model.select_dtypes(include=['object', 'category']).columns.tolist()
@@ -94,7 +96,7 @@ for col in categorical_cols:
     if df_model[col].isnull().sum() > 0:
         mode_val = df_model[col].mode()[0]
         df_model[col].fillna(mode_val, inplace=True)
-        print(f"  ✓ Filled {col} with mode: {mode_val}")
+        print(f"  Filled {col} with mode: {mode_val}")
 
 # ---- Encode categorical variables ----
 print("\n[2] Encoding categorical variables...")
@@ -105,19 +107,19 @@ for col in categorical_cols:
     le = LabelEncoder()
     df_model[col] = le.fit_transform(df_model[col].astype(str))
     label_encoders[col] = le
-    print(f"  ✓ Encoded {col} ({len(le.classes_)} categories)")
+    print(f"  Encoded {col} ({len(le.classes_)} categories)")
 
 # Save encoders
 joblib.dump(label_encoders, 'label_encoders.pkl')
-print("\n✓ Saved: label_encoders.pkl")
+print("\nSaved: label_encoders.pkl")
 
 # ---- Separate features and target ----
 X = df_model.drop('Churn', axis=1)
 y = df_model['Churn']
 
-print(f"\n✓ Features shape: {X.shape}")
-print(f"✓ Target shape: {y.shape}")
-print(f"✓ Feature names: {list(X.columns)}")
+print(f"\nFeatures shape: {X.shape}")
+print(f"Target shape: {y.shape}")
+print(f"Feature names: {list(X.columns)}")
 
 # ---- Train-test split ----
 print("\n[3] Splitting data...")
@@ -126,10 +128,10 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
 
-print(f"  ✓ Training set: {X_train.shape[0]:,} samples")
-print(f"  ✓ Test set: {X_test.shape[0]:,} samples")
-print(f"  ✓ Train churn rate: {y_train.mean():.2%}")
-print(f"  ✓ Test churn rate: {y_test.mean():.2%}")
+print(f"  Training set: {X_train.shape[0]:,} samples")
+print(f"  Test set: {X_test.shape[0]:,} samples")
+print(f"  Train churn rate: {y_train.mean():.2%}")
+print(f"  Test churn rate: {y_test.mean():.2%}")
 
 # ---- Feature Scaling ----
 print("\n[4] Scaling features...")
@@ -143,7 +145,7 @@ X_train_scaled = pd.DataFrame(X_train_scaled, columns=X_train.columns, index=X_t
 X_test_scaled = pd.DataFrame(X_test_scaled, columns=X_test.columns, index=X_test.index)
 
 joblib.dump(scaler, 'scaler.pkl')
-print("  ✓ Saved: scaler.pkl")
+print("  Saved: scaler.pkl")
 
 # ============================================================================
 # 3. HANDLE CLASS IMBALANCE WITH SMOTE
@@ -167,7 +169,7 @@ print(f"\nAfter SMOTE:")
 print(f"  Class 0: {(y_train_resampled == 0).sum():,}")
 print(f"  Class 1: {(y_train_resampled == 1).sum():,}")
 print(f"  Ratio: 1:1 (balanced)")
-print(f"  ⏱️  SMOTE time: {smote_time:.2f} seconds")
+print(f"  SMOTE time: {smote_time:.2f} seconds")
 
 # ============================================================================
 # 4. MODEL TRAINING
@@ -188,8 +190,8 @@ model.fit(X_train_resampled, y_train_resampled)
 
 train_time = time.time() - train_start
 
-print(f"\n✓ Model trained successfully!")
-print(f"  ⏱️  Training time: {train_time:.2f} seconds")
+print(f"\nModel trained successfully!")
+print(f"  Training time: {train_time:.2f} seconds")
 
 
 # ============================================================================
@@ -210,14 +212,14 @@ recall = recall_score(y_test, y_pred)
 f1 = f1_score(y_test, y_pred)
 roc_auc = roc_auc_score(y_test, y_proba)
 
-print("\n📊 Performance Metrics:")
+print("\nPerformance Metrics:")
 print(f"  Accuracy:  {accuracy:.4f}")
 print(f"  Precision: {precision:.4f}")
 print(f"  Recall:    {recall:.4f}")
 print(f"  F1-Score:  {f1:.4f}")
 print(f"  ROC-AUC:   {roc_auc:.4f}")
 
-print("\n📋 Classification Report:")
+print("\nClassification Report:")
 print(classification_report(y_test, y_pred, target_names=['No Churn', 'Churn']))
 
 # Confusion Matrix
@@ -232,7 +234,7 @@ plt.ylabel('True Label')
 plt.xlabel('Predicted Label')
 plt.tight_layout()
 plt.savefig('original_data_visualisation/confusion_matrix.png', dpi=300, bbox_inches='tight')
-print("\n✓ Saved: confusion_matrix.png")
+print("\nSaved: confusion_matrix.png")
 
 # ROC Curve
 fpr, tpr, thresholds = roc_curve(y_test, y_proba)
@@ -249,7 +251,7 @@ plt.legend(loc='lower right')
 plt.grid(alpha=0.3)
 plt.tight_layout()
 plt.savefig('results/roc_curve.png', dpi=300, bbox_inches='tight')
-print("✓ Saved: roc_curve.png")
+print("Saved: roc_curve.png")
 
 # Feature Importance
 feature_importance = pd.DataFrame({
@@ -257,7 +259,7 @@ feature_importance = pd.DataFrame({
     'Importance': model.feature_importances_
 }).sort_values('Importance', ascending=False)
 
-print("\n📈 Top 20 Most Important Features:")
+print("\nTop 20 Most Important Features:")
 print(feature_importance.head(20))
 
 plt.figure(figsize=(12, 8))
@@ -268,7 +270,7 @@ plt.title('Top 20 Feature Importances', fontsize=14, fontweight='bold')
 plt.gca().invert_yaxis()
 plt.tight_layout()
 plt.savefig('original_data_visualisation/feature_importance.png', dpi=300, bbox_inches='tight')
-print("\n✓ Saved: feature_importance.png")
+print("\nSaved: feature_importance.png")
 
 # ============================================================================
 # 6. SAVE MODEL AND ARTIFACTS
@@ -280,11 +282,11 @@ print("=" * 80)
 
 # Save model
 joblib.dump(model, 'final_xgboost_model.pkl')
-print("✓ Saved: final_xgboost_model.pkl")
+print("Saved: final_xgboost_model.pkl")
 
 # Save feature names
 joblib.dump(list(X_train.columns), 'feature_names.pkl')
-print("✓ Saved: feature_names.pkl")
+print("Saved: feature_names.pkl")
 
 # Save test data for dashboard
 test_data = pd.DataFrame(X_test_scaled, columns=X_test.columns)
@@ -292,7 +294,7 @@ test_data['Churn_True'] = y_test.values
 test_data['Churn_Predicted'] = y_pred
 test_data['Churn_Probability'] = y_proba
 test_data.to_csv('test_data_with_predictions.csv', index=False)
-print("✓ Saved: test_data_with_predictions.csv")
+print("Saved: test_data_with_predictions.csv")
 
 # Save performance metrics
 metrics_dict = {
@@ -305,7 +307,7 @@ metrics_dict = {
     'gpu_used': gpu_available
 }
 joblib.dump(metrics_dict, 'model_metrics.pkl')
-print("✓ Saved: model_metrics.pkl")
+print("Saved: model_metrics.pkl")
 
 
 # ============================================================================
@@ -318,16 +320,16 @@ print("=" * 80)
 
 total_time = smote_time + train_time
 
-print(f"\n⏱️  Performance Breakdown:")
+print(f"\nPerformance Breakdown:")
 print(f"  SMOTE resampling:    {smote_time:.2f}s")
 print(f"  Model training:      {train_time:.2f}s")
 print(f"  {'─'*40}")
 print(f"  TOTAL PIPELINE TIME: {total_time:.2f}s")
 
 if gpu_available:
-    print(f"\n⚡ GPU acceleration was used")
+    print(f"\nGPU acceleration was used")
 else:
-    print(f"\n💻 CPU mode was used")
+    print(f"\nCPU mode was used")
 
 # ============================================================================
 # 8. SUMMARY
@@ -337,7 +339,7 @@ print("\n" + "=" * 80)
 print("MODELING PIPELINE COMPLETE!")
 print("=" * 80)
 
-print("\n📊 Final Model Summary:")
+print("\nFinal Model Summary:")
 print(f"  - Algorithm: XGBoost Classifier (GPU: {gpu_available})")
 print(f"  - Training samples: {X_train_resampled.shape[0]:,} (after SMOTE)")
 print(f"  - Test samples: {X_test.shape[0]:,}")
@@ -346,7 +348,7 @@ print(f"  - ROC-AUC Score: {roc_auc:.4f}")
 print(f"  - F1-Score: {f1:.4f}")
 print(f"  - Total time: {total_time:.2f} seconds")
 
-print("\n📁 Files created:")
+print("\nFiles created:")
 print("  1. label_encoders.pkl")
 print("  2. scaler.pkl")
 print("  3. final_xgboost_model.pkl")
@@ -357,4 +359,4 @@ print("  7. confusion_matrix.png")
 print("  8. roc_curve.png")
 print("  9. feature_importance.png")
 
-print("\n✅ Ready for SHAP explainability and dashboard!")
+print("\nReady for SHAP explainability and dashboard!")

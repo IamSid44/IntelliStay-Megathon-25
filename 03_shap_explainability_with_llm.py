@@ -39,10 +39,10 @@ def test_lm_studio():
             print(f"  Available model: {models.get('data', [{}])[0].get('id', 'Unknown')}")
             return True
         else:
-            print(f"⚠️  LM Studio connection failed: Status {response.status_code}")
+            print(f"LM Studio connection failed: Status {response.status_code}")
             return False
     except Exception as e:
-        print(f"⚠️  Cannot connect to LM Studio: {str(e)}")
+        print(f"Cannot connect to LM Studio: {str(e)}")
         print(f"   Make sure LM Studio is running on http://localhost:1234")
         return False
 
@@ -84,7 +84,7 @@ print("\n" + "=" * 80)
 print("CREATING SHAP EXPLAINER")
 print("=" * 80)
 
-print("\n🔍 Initializing SHAP TreeExplainer...")
+print("\nInitializing SHAP TreeExplainer...")
 print("   This may take a few minutes for large datasets...")
 
 
@@ -99,7 +99,7 @@ explainer = shap.TreeExplainer(model)
 print("SHAP TreeExplainer created successfully!")
 
 # Calculate SHAP values
-print("\n🔍 Calculating SHAP values...")
+print("\nCalculating SHAP values...")
 shap_values = explainer.shap_values(X_shap_sample)
 print("SHAP values calculated!")
 
@@ -151,7 +151,7 @@ global_importance_df = pd.DataFrame({
     'Mean_Abs_SHAP': mean_abs_shap,
 }).sort_values('Mean_Abs_SHAP', ascending=False).reset_index(drop=True)
 
-print("\n📊 Top 10 Global Churn Drivers:")
+print("\nTop 10 Global Churn Drivers:")
 print(global_importance_df.head(10).to_string(index=False))
 
 # Save global importance
@@ -169,7 +169,7 @@ print("=" * 80)
 # Create a DataFrame to store individual SHAP explanations
 individual_explanations = []
 
-print("\n🔍 Generating individual customer explanations...")
+print("\nGenerating individual customer explanations...")
 
 for idx in range(min(100, len(X_shap_sample))):  # First 100 customers
     customer_shap = shap_values[idx]
@@ -218,7 +218,7 @@ low_risk_idx = y_proba_sample.nsmallest(3).index
 
 sample_cases = list(high_risk_idx) + list(low_risk_idx)
 
-print(f"\n📊 Creating waterfall plots for {len(sample_cases)} sample customers...")
+print(f"\nCreating waterfall plots for {len(sample_cases)} sample customers...")
 
 for original_idx in sample_cases:
     # Find position in sample
@@ -249,7 +249,7 @@ for original_idx in sample_cases:
 
 print(f"  Saved {len(sample_cases)} waterfall plot images")
 
-print("\n💡 Waterfall plots show:")
+print("\nWaterfall plots show:")
 print("   - Red bars: Features pushing TOWARD churn")
 print("   - Blue bars: Features pushing AWAY from churn")
 print("   - Only top 10 most impactful features (less clutter!)")
@@ -271,7 +271,7 @@ shap_data_package_for_dashboard = {
 }
 
 joblib.dump(shap_data_package_for_dashboard, 'shap_data_package.pkl')
-print("✓ Saved: shap_data_package.pkl (for dashboard)")
+print("Saved: shap_data_package.pkl (for dashboard)")
 
 # ============================================================================
 # 6. LLM-POWERED INSIGHTS GENERATION
@@ -374,15 +374,15 @@ Keep your language non-technical, concise, and action-oriented. This will be rea
                 'top_drivers': top_3_features
             }
         else:
-            print(f"   ⚠️  LLM request failed: {response.status_code}")
+            print(f"   LLM request failed: {response.status_code}")
             return None
             
     except Exception as e:
-        print(f"   ⚠️  LLM generation error: {str(e)}")
+        print(f"   LLM generation error: {str(e)}")
         return None
 
 # Generate insights for high-risk customers
-print("\n🤖 Generating LLM insights for high-risk customers...")
+print("\nGenerating LLM insights for high-risk customers...")
 
 llm_insights = []
 
@@ -400,9 +400,9 @@ for idx, row in high_risk_customers.iterrows():
     
     if insights:
         llm_insights.append(insights)
-        print("✓")
+        print("")
     else:
-        print("⚠️ Failed")
+        print("Failed")
 
 # Save LLM insights
 if llm_insights:
@@ -411,7 +411,7 @@ if llm_insights:
     print(f"\nSaved: llm_retention_insights.csv ({len(llm_insights)} insights)")
     
     # Display sample
-    print("\n📝 Sample LLM-Generated Insight:")
+    print("\nSample LLM-Generated Insight:")
     print("=" * 80)
     if len(llm_insights) > 0:
         sample = llm_insights[0]
@@ -419,7 +419,7 @@ if llm_insights:
         print(f"Churn Risk: {sample['churn_probability']:.1%}")
         print(f"\nAnalysis:\n{sample['raw_analysis']}")
 else:
-    print("\n⚠️  No LLM insights generated (LM Studio may not be running)")
+    print("\nNo LLM insights generated (LM Studio may not be running)")
 
 # ============================================================================
 # 7. CREATE SHAP SUMMARY FOR DASHBOARD
@@ -449,13 +449,13 @@ print("\n" + "=" * 80)
 print("SHAP + LLM ANALYSIS COMPLETE!")
 print("=" * 80)
 
-print("\n📊 Analysis Summary:")
+print("\nAnalysis Summary:")
 print(f"  - Customers analyzed: {len(X_shap_sample):,}")
 print(f"  - Features: {len(feature_names)}")
 print(f"  - Top churn driver: {global_importance_df.iloc[0]['Feature']}")
 print(f"  - LLM insights generated: {len(llm_insights)}")
 
-print("\n📁 Files created:")
+print("\nFiles created:")
 print("  1. shap_explainer.pkl")
 print("  2. shap_values.npy")
 print("  3. shap_sample_indices.npy")
@@ -467,8 +467,8 @@ print("  8. shap_force_plot_customer_*.png (multiple files)")
 print("  9. llm_retention_insights.csv")
 print(" 10. shap_dashboard_data.pkl")
 
-print("\n✅ Ready to build the Streamlit dashboard!")
-print("\n💡 Dashboard will show:")
+print("\nReady to build the Streamlit dashboard!")
+print("\nDashboard will show:")
 print("   - Global SHAP summary (for strategists)")
 print("   - Individual force plots (for retention agents)")
 print("   - LLM-powered retention recommendations")

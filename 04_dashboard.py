@@ -19,7 +19,6 @@ warnings.filterwarnings('ignore')
 # Page config
 st.set_page_config(
     page_title="Churn Retention Intelligence",
-    page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -419,7 +418,7 @@ def load_models_and_data():
         return None
 
 # Load everything
-with st.spinner("🔄 Loading AI models and data..."):
+with st.spinner("Loading AI models and data..."):
     data = load_models_and_data()
 
 if data is None:
@@ -558,7 +557,7 @@ def generate_dice_counterfactuals(customer_idx):
         return cf_examples.final_cfs_df
         
     except Exception as e:
-        st.warning(f"⚠️ DiCE unavailable: {str(e)}")
+        st.warning(f"DiCE unavailable: {str(e)}")
         return None
 
 def get_unscaled_customer_data(customer_idx):
@@ -691,7 +690,7 @@ Category: {nudge_category}
 {nudge_action}
 
 **MESSAGE TEMPLATE:**
-"Hi [Customer Name], we noticed you've been with us for [tenure]. As a valued customer, we'd like to discuss how we can better serve you. Add nudge message here pls. Can we schedule a quick call this week?"
+"Hi [Customer Name], we noticed you've been with us for [tenure]. As a valued customer, we'd like to discuss how we can better serve you. Can we schedule a quick call this week?"
 
 *Note: LM Studio unavailable - using fallback analysis with behavioral nudges*"""
 
@@ -741,14 +740,14 @@ Category: {nudge_category}
 # SIDEBAR - NAVIGATION
 # ============================================================================
 
-st.sidebar.title("🛡️ Navigation")
+st.sidebar.title("Navigation")
 page = st.sidebar.radio(
     "Select View:",
-    ["🌐 Churn Dashboard", "👤 Customer Deep Dive", "🎮 Retention Simulator"]
+    ["Churn Dashboard", "Customer Deep Dive", "Retention Simulator"]
 )
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("### 📊 Quick Stats")
+st.sidebar.markdown("### Quick Stats")
 total_customers = len(test_data)
 high_risk = len(test_data[test_data['Churn_Probability'] > 0.7])
 medium_risk = len(test_data[(test_data['Churn_Probability'] > 0.4) & (test_data['Churn_Probability'] <= 0.7)])
@@ -763,10 +762,10 @@ st.sidebar.metric("Low Risk", f"{low_risk:,}")
 # PAGE 1: GLOBAL DASHBOARD
 # ============================================================================
 
-if page == "🌐 Churn Dashboard":
+if page == "Churn Dashboard":
     st.markdown('<h1 class="main-header">IntelliStay Churn Analysis Dashboard </h1>', unsafe_allow_html=True)
     
-    st.markdown("### 📈 Portfolio Overview")
+    st.markdown("### Portfolio Overview")
     
     # Key metrics
     col1, col2, col3, col4 = st.columns(4)
@@ -796,7 +795,7 @@ if page == "🌐 Churn Dashboard":
         )
     
     with col4:
-        llm_status = "🟢 Online" if check_llm_available() else "🔴 Offline"
+        llm_status = "Online" if check_llm_available() else "Offline"
         st.metric(
             "AI Strategist",
             llm_status,
@@ -821,7 +820,7 @@ if page == "🌐 Churn Dashboard":
     st.markdown("---")
     
     # Top drivers table
-    st.markdown("### 📊 Strategic Insights")
+    st.markdown("### Strategic Insights")
     
     col1, col2 = st.columns([2, 1])
     
@@ -850,14 +849,14 @@ if page == "🌐 Churn Dashboard":
     st.markdown("---")
     
     # Vulnerable customers list
-    st.markdown("### 🚨 Immediate Action Required")
+    st.markdown("### Immediate Action Required")
     
     vulnerable = test_data.nlargest(20, 'Churn_Probability')[
         ['Churn_Probability', 'Churn_Predicted']
     ].reset_index()
     vulnerable.columns = ['Customer ID', 'Churn Risk', 'Predicted Churn']
     vulnerable['Churn Risk'] = vulnerable['Churn Risk'].apply(lambda x: f"{x:.1%}")
-    vulnerable['Status'] = '🔴 URGENT'
+    vulnerable['Status'] = 'URGENT'
     
     st.dataframe(
         vulnerable.style.apply(
@@ -873,8 +872,8 @@ if page == "🌐 Churn Dashboard":
 # PAGE 2: CUSTOMER DEEP DIVE
 # ============================================================================
 
-elif page == "👤 Customer Deep Dive":
-    st.markdown('<h1 class="main-header">👤 Customer Deep Dive Analysis</h1>', unsafe_allow_html=True)
+elif page == "Customer Deep Dive":
+    st.markdown('<h1 class="main-header">Customer Deep Dive Analysis</h1>', unsafe_allow_html=True)
     
     # Search interface
     st.markdown("### Customer Search")
@@ -936,12 +935,12 @@ elif page == "👤 Customer Deep Dive":
     st.markdown("---")
     
     # Analyze button
-    analyze_button = st.button("🔬 ANALYZE CUSTOMER", type="primary", width='stretch')
+    analyze_button = st.button("ANALYZE CUSTOMER", type="primary", width='stretch')
     
     if analyze_button or 'last_analyzed' in st.session_state and st.session_state.last_analyzed == customer_idx:
         st.session_state.last_analyzed = customer_idx
         
-        with st.spinner("🤖 Running AI analysis..."):
+        with st.spinner("Running AI analysis..."):
             # Get SHAP features
             shap_features = get_customer_shap_features(customer_idx)
             
@@ -961,7 +960,7 @@ elif page == "👤 Customer Deep Dive":
                 dice_summary
             )
         
-        st.success("✅ Analysis complete!")
+        st.success("Analysis complete!")
         
         # Display results
         col1, col2 = st.columns([1, 1])
@@ -980,7 +979,7 @@ elif page == "👤 Customer Deep Dive":
             st.markdown("#### Top Risk Factors")
             if shap_features:
                 for i, feat in enumerate(shap_features[:5], 1):
-                    direction = "🔴" if feat['shap_value'] > 0 else "🔵"
+                    direction = "[+] Raises risk:" if feat['shap_value'] > 0 else "[-] Lowers risk:"
                     st.markdown(
                         f"{direction} **{feat['feature']}**: {feat['value']:.2f} "
                         f"(Impact: {feat['shap_value']:+.3f})"
@@ -1032,11 +1031,11 @@ elif page == "👤 Customer Deep Dive":
                     
                     with col3:
                         if cf_prob < 0.4:
-                            new_status = "✅ LOW RISK"
+                            new_status = "LOW RISK"
                         elif cf_prob < 0.7:
-                            new_status = "⚠️ MEDIUM RISK"
+                            new_status = "MEDIUM RISK"
                         else:
-                            new_status = "🔴 HIGH RISK"
+                            new_status = "HIGH RISK"
                         st.metric("New Status", new_status)
                     
                     st.markdown("#### Required Actions:")
@@ -1051,7 +1050,7 @@ elif page == "👤 Customer Deep Dive":
                             pct_change = ((new_val - orig_val) / (abs(orig_val) + 1e-10)) * 100
                             
                             st.markdown(
-                                f"💰 **{feat}**: ${orig_val:.2f} → ${new_val:.2f} "
+                                f"**{feat}**: ${orig_val:.2f} → ${new_val:.2f} "
                                 f"*({pct_change:+.1f}%)*"
                             )
 
@@ -1059,10 +1058,10 @@ elif page == "👤 Customer Deep Dive":
 # PAGE 3: RETENTION SIMULATOR
 # ============================================================================
 
-elif page == "🎮 Retention Simulator":
-    st.markdown('<h1 class="main-header">🎮 Interactive Retention Simulator</h1>', unsafe_allow_html=True)
+elif page == "Retention Simulator":
+    st.markdown('<h1 class="main-header">Interactive Retention Simulator</h1>', unsafe_allow_html=True)
     
-    st.markdown("### 🔧 Select Customer & Adjust Parameters")
+    st.markdown("### Select Customer & Adjust Parameters")
     
     # Customer selection
     available_customers = shap_data['customer_indices']
@@ -1073,7 +1072,7 @@ elif page == "🎮 Retention Simulator":
         available_customers = [idx for idx in available_customers if idx in dice_data.index]
     
     if len(available_customers) == 0:
-        st.error("❌ No customers available for simulation")
+        st.error("No customers available for simulation")
         st.stop()
     
     customer_idx = st.selectbox(
@@ -1088,7 +1087,7 @@ elif page == "🎮 Retention Simulator":
         original_data = get_unscaled_customer_data(customer_idx)
         
         if original_data is None:
-            st.error("❌ Could not load customer data")
+            st.error("Could not load customer data")
             st.stop()
         
         # Get probability from test_data
@@ -1105,7 +1104,7 @@ elif page == "🎮 Retention Simulator":
     with col1:
         st.markdown('<div class="section-header">Premium Adjustment Parameters</div>', unsafe_allow_html=True)
         
-        st.info("💡 Use sliders to simulate discount scenarios")
+        st.info("Use sliders to simulate discount scenarios")
         
         # Get original values safely
         orig_annual = float(original_data['curr_ann_amt'])
@@ -1129,7 +1128,7 @@ elif page == "🎮 Retention Simulator":
         premium_affordability = premium_to_income * 100
         
         st.markdown("---")
-        st.markdown("#### 📊 Calculated Metrics:")
+        st.markdown("#### Calculated Metrics:")
         
         col_a, col_b = st.columns(2)
         with col_a:
@@ -1147,14 +1146,14 @@ elif page == "🎮 Retention Simulator":
         
         # Simulate button
         simulate_clicked = st.button(
-            "🔮 SIMULATE IMPACT", 
+            "SIMULATE IMPACT", 
             type="primary", 
             width='stretch',
             key='simulate_button'
         )
         
         if simulate_clicked:
-            with st.spinner("🔄 Running simulation..."):
+            with st.spinner("Running simulation..."):
                 try:
                     # Create modified customer data
                     modified_data = original_data.copy()
@@ -1177,10 +1176,10 @@ elif page == "🎮 Retention Simulator":
                         'orig_monthly': orig_monthly
                     }
                     
-                    st.success("✅ Simulation complete!")
+                    st.success("Simulation complete!")
                     
                 except Exception as e:
-                    st.error(f"❌ Simulation failed: {str(e)}")
+                    st.error(f"Simulation failed: {str(e)}")
     
     with col2:
         st.markdown('<div class="section-header">Simulation Results</div>', unsafe_allow_html=True)
@@ -1213,7 +1212,7 @@ elif page == "🎮 Retention Simulator":
                 )
             
             # Visual comparison
-            st.markdown("#### 📈 Risk Comparison")
+            st.markdown("#### Risk Comparison")
             
             fig, ax = plt.subplots(figsize=(10, 4))
             
@@ -1241,12 +1240,12 @@ elif page == "🎮 Retention Simulator":
             
             # Recommendations
             if result['new_prob'] < result['original_prob']:
-                st.success("✅ **Positive Impact!** These changes reduce churn risk.")
+                st.success("**Positive Impact!** These changes reduce churn risk.")
                 
                 discount_annual = result['orig_annual'] - result['curr_ann_amt']
                 discount_pct = (discount_annual / (result['orig_annual'] + 1e-10)) * 100
                 
-                st.markdown("#### 💡 Recommended Action Plan:")
+                st.markdown("#### Recommended Action Plan:")
                 st.markdown(f"""
                 **Premium Adjustment:**
                 - Original annual premium: **${result['orig_annual']:.2f}**
@@ -1258,10 +1257,10 @@ elif page == "🎮 Retention Simulator":
                 - New monthly payment: **${result['monthly_premium']:.2f}**
                 
                 **Next Steps:**
-                1. 📞 Contact customer within 24-48 hours
-                2. 💬 Present personalized retention offer
-                3. 📋 Document interaction in CRM
-                4. 📊 Schedule follow-up in 30 days
+                1. Contact customer within 24-48 hours
+                2. Present personalized retention offer
+                3. Document interaction in CRM
+                4. Schedule follow-up in 30 days
                 """)
                 
                 # Calculate ROI
@@ -1269,7 +1268,7 @@ elif page == "🎮 Retention Simulator":
                 retention_cost = discount_annual
                 expected_value = annual_revenue * (1 - result['new_prob'])
                 
-                st.markdown("#### 💰 Business Impact:")
+                st.markdown("#### Business Impact:")
                 col_x, col_y, col_z = st.columns(3)
                 with col_x:
                     st.metric("Annual Revenue", f"${annual_revenue:.2f}")
@@ -1279,23 +1278,23 @@ elif page == "🎮 Retention Simulator":
                     st.metric("Expected Value", f"${expected_value:.2f}")
                 
             else:
-                st.warning("⚠️ **Limited impact detected.**")
+                st.warning("**Limited impact detected.**")
                 st.markdown("""
                 **Current premium adjustments may not be sufficient.**
                 
                 **Consider alternative strategies:**
-                - 🎁 Non-monetary incentives (better coverage, loyalty perks)
-                - 🤝 Personal account review with agent
-                - 📞 Proactive customer service outreach
-                - 💳 Payment plan flexibility
-                - 🏆 Loyalty program enrollment
+                - Non-monetary incentives (better coverage, loyalty perks)
+                - Personal account review with agent
+                - Proactive customer service outreach
+                - Payment plan flexibility
+                - Loyalty program enrollment
                 """)
         
         else:
-            st.info("👆 **How to use:**\n\n1. Adjust the sliders on the left\n2. Click 'SIMULATE IMPACT'\n3. View predicted results here")
+            st.info("**How to use:**\n\n1. Adjust the sliders on the left\n2. Click 'SIMULATE IMPACT'\n3. View predicted results here")
             
             # Show current profile
-            st.markdown("#### 📋 Current Customer Profile")
+            st.markdown("#### Current Customer Profile")
             
             profile_data = pd.DataFrame({
                 'Metric': [
@@ -1308,7 +1307,7 @@ elif page == "🎮 Retention Simulator":
                     f"${orig_annual:.2f}",
                     f"${orig_monthly:.2f}",
                     f"{original_prob:.1%}",
-                    "🔴 HIGH" if original_prob > 0.7 else "🟡 MEDIUM" if original_prob > 0.4 else "🟢 LOW"
+                    "HIGH" if original_prob > 0.7 else "MEDIUM" if original_prob > 0.4 else "LOW"
                 ]
             })
             
@@ -1323,6 +1322,6 @@ st.markdown("""
 <div style='text-align: center; color: #666; padding: 2rem;'>
     <p><strong>AI-Powered Churn Retention Intelligence</strong></p>
     <p>Made by Red Devils</p>
-    <p>Built for Megathon'25 🏆</p>
+    <p>Built for Megathon'25</p>
 </div>
 """, unsafe_allow_html=True)

@@ -1,514 +1,326 @@
-# 🛡️ AI-Powered Churn Retention Intelligence Platform
+# IntelliStay: AI-Powered Churn Retention Intelligence Platform
 
-## 🏆 1st Place Winner at Megathon 2025 (40+ Teams) 
+> **1st Place, Megathon 2025 (40+ teams)**
 
-### Team Red Devils 
-- M P Samartha
-- Shlok Sand
-- Shreyas Kasture
-- Siddarth Gottumukkula
-- Vedant Pahariya
+An end-to-end system that predicts auto-insurance customer churn, explains why each customer is at risk, and recommends what to do about it. It combines gradient-boosted modeling, SHAP explanations, DiCE counterfactuals, a local LLM and a Streamlit dashboard.
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![XGBoost](https://img.shields.io/badge/ML-XGBoost-orange.svg)](https://xgboost.readthedocs.io/)
 [![SHAP](https://img.shields.io/badge/XAI-SHAP-green.svg)](https://shap.readthedocs.io/)
 [![Streamlit](https://img.shields.io/badge/UI-Streamlit-red.svg)](https://streamlit.io/)
 
----
+![IntelliStay dashboard](Dashboard.png)
 
-## 📋 Table of Contents
+## Team Red Devils
 
-- [Overview](#-overview)
-- [Key Features](#-key-features)
-- [System Architecture](#-system-architecture)
-- [Technology Stack](#-technology-stack)
-- [Installation](#-installation)
-- [Usage Guide](#-usage-guide)
-- [Project Structure](#-project-structure)
-- [Methodology](#-methodology)
-- [Results](#-results)
-- [Future Enhancements](#-future-enhancements)
-- [Team](#-team)
+- Siddarth Gottumukkula
+- Shlok Sand
+- Shreyas Kasture
+- M P Samartha
+- Vedant Pahariya
 
----
+Solution deck: [Solution Presentation.pdf](Solution%20Presentation.pdf)
 
-## 🎯 Overview
+## Table of Contents
 
-The **Churn Retention Intelligence Platform** is an AI-powered solution designed to help insurance companies predict, understand, and prevent customer churn. Unlike traditional black-box ML models, our system provides:
-
-- **Predictive Analytics**: 94.2% accurate churn prediction using XGBoost
-- **Explainable AI**: SHAP analysis reveals why each customer might leave
-- **Actionable Strategies**: DiCE counterfactuals show exactly what to change
-- **Behavioral Nudges**: Psychology-based retention tactics beyond discounts
-- **Interactive Simulation**: Real-time "what-if" analysis for retention strategies
-
-### 💡 The Problem
-
-Insurance companies lose **15-25% of customers annually** to churn, costing billions in revenue. Traditional approaches:
-- ❌ Can't predict which customers will leave
-- ❌ Don't understand why customers churn
-- ❌ Offer generic discounts that hurt margins
-- ❌ Lack personalized retention strategies
-
-###  Our Solution
-
-A comprehensive AI system that:
-1. **Predicts** churn risk with 94%+ accuracy
-2. **Explains** the top risk factors for each customer (SHAP)
-3. **Prescribes** minimal changes needed to retain them (DiCE)
-4. **Suggests** behavioral nudges proven to reduce churn
-5. **Simulates** impact of different retention strategies
+- [Overview](#overview)
+- [Results](#results)
+- [Key Features](#key-features)
+- [System Architecture](#system-architecture)
+- [Methodology](#methodology)
+- [Technology Stack](#technology-stack)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Project Structure](#project-structure)
+- [Limitations and Future Work](#limitations-and-future-work)
 
 ---
 
-## 🌟 Key Features
+## Overview
 
-### 1. **Portfolio Overview Dashboard**
-- Real-time churn risk monitoring across 336K+ customers
-- Global feature importance analysis
-- Priority action list for high-risk customers
-- Revenue-at-risk calculations
+Retention teams usually know *that* a customer may leave, but not *why*, and the default response is a blanket discount. IntelliStay closes that gap in four steps:
 
-### 2. **Customer Deep Dive Analysis**
-- Individual churn probability (0-100%)
-- SHAP waterfall plots showing risk drivers
-- Top 5 factors contributing to churn
-- AI-generated customer personas
-- Behavioral nudge recommendations
+1. **Predict** churn probability per customer with XGBoost, trained on SMOTE-balanced data.
+2. **Explain** the top risk drivers for each customer and across the portfolio with SHAP.
+3. **Prescribe** minimal, constrained premium changes that flip the predicted outcome, using DiCE counterfactuals.
+4. **Act** on the result: a local LLM drafts a customer persona, retention actions and a behavioral-economics nudge message, and an interactive simulator shows the effect of a given discount before it is offered.
 
-### 3. **Counterfactual Retention Strategies (DiCE)**
-- Shows 3 different retention scenarios
-- Minimal changes needed to reduce churn
-- Only modifies actionable features (premiums, not age/tenure)
-- Calculates expected risk reduction
-
-### 4. **Interactive Retention Simulator**
-- Real-time premium adjustment sliders
-- Instant churn probability recalculation
-- Business impact metrics (ROI, retention cost)
-- Ready-to-implement action plans
-
-### 5. **Behavioral Economics Integration**
-- **Loss Aversion**: "You'll lose your $847 accident-free bonus"
-- **Social Proof**: "92% of customers in Indore renewed"
-- **Reciprocity**: "Free vehicle health check-up"
-- **Commitment**: "Lock in your rate for 2 years"
-- **Scarcity**: "Offer expires in 48 hours"
-- **Anchoring**: "You've saved $2,340 over 3 years"
-
-### 6. **Local LLM Integration**
-- Qwen 2.5 (3B parameters) via LM Studio
-- Synthesizes SHAP + DiCE insights
-- Generates customer personas
-- Creates ready-to-send message templates
-- Works offline (no API costs)
+The whole pipeline runs locally. The LLM is served through LM Studio, so there are no API costs and no customer data leaves the machine.
 
 ---
 
-## 🏗️ System Architecture
+## Results
+
+### Model performance (held-out test set)
+
+| Metric    |  Value |
+|-----------|-------:|
+| Accuracy  |  0.883 |
+| Precision |  0.490 |
+| Recall    |  0.348 |
+| F1-Score  |  0.407 |
+| ROC-AUC   |  0.695 |
+
+Churn is the minority class (roughly 1 in 9 customers), so accuracy alone is not informative; precision, recall and F1 on the churn class are the relevant measures. An Optuna-tuned XGBoost was also evaluated against the baseline, and it did not improve F1 or recall, so the baseline model was kept. See `results/model_comparison.png`.
+
+<p>
+  <img src="results/overall_performance_updated.png" alt="Overall model performance" width="48%">
+  <img src="results/roc_curve.png" alt="ROC curve" width="48%">
+</p>
+
+### Top global churn drivers (SHAP)
+
+1. `days_tenure` (shorter tenure, higher risk)
+2. `length_of_residence`
+3. `home_market_value`
+4. `age_in_years`
+5. `cust_orig_month`
+
+<p>
+  <img src="results/shap_feature_importance_bar.png" alt="SHAP feature importance" width="48%">
+  <img src="results/shap_summary_plot.png" alt="SHAP summary plot" width="48%">
+</p>
+
+### Portfolio view in the dashboard
+
+| Metric | Value |
+|--------|------:|
+| Customers scored | 336,182 |
+| Average predicted churn risk | 14.7% |
+| High risk (>70%) | 1,472 |
+| Medium risk (40-70%) | 31,591 |
+| Low risk (<40%) | 303,119 |
+
+Revenue at risk is estimated as high-risk customers multiplied by an assumed average annual premium of $950.
+
+### Example: single-customer retention scenario
+
+Customer 63533 starts at a 91.0% predicted churn risk, driven mainly by low `days_tenure`. A DiCE counterfactual with a 25% premium reduction brings the predicted risk to 32.4%, a 58.6 percentage-point drop. The corresponding SHAP waterfall is in `shap_force_plots/`.
+
+---
+
+## Key Features
+
+### Portfolio overview dashboard
+- Portfolio-wide churn risk distribution and global feature importance
+- Priority list of the highest-risk customers
+- Revenue-at-risk estimate and live LLM status indicator
+
+### Customer deep dive
+- Individual churn probability with a SHAP waterfall plot
+- Top risk factors with direction and magnitude of impact
+- LLM-generated customer persona, retention actions and nudge message
+- Rule-based fallback insights when the LLM server is unavailable
+
+### Counterfactual retention strategies (DiCE)
+- Three diverse retention scenarios per customer
+- Only actionable features are modified (premium-related); demographics, tenure and location are held fixed
+- Premium can only decrease, capped at a 50% discount
+
+### Interactive retention simulator
+- Premium-adjustment slider with instant churn re-scoring
+- Expected-value and retention-cost metrics
+- Suggested action plan based on the simulated impact
+
+### Behavioral economics layer
+Retention messages draw on six established nudge categories, selected by the customer's primary churn driver:
+
+| Nudge | Principle | Example |
+|-------|-----------|---------|
+| Loss aversion | People weigh losses more heavily than gains | "You'll lose your accident-free bonus" |
+| Social proof | People follow peer behavior | "92% of customers in your area renewed" |
+| Reciprocity | People return favors | "Complimentary vehicle check-up" |
+| Commitment | People value locked-in decisions | "Lock in your rate for 2 years" |
+| Scarcity | Limited-time offers drive action | "Offer expires in 48 hours" |
+| Anchoring | Reference points shape perceived value | "You've saved $2,340 over 3 years" |
+
+### Local LLM integration
+- Qwen3-4B-Thinking (`qwen/qwen3-4b-thinking-2507`) served by LM Studio
+- Synthesizes SHAP and DiCE output into plain-language guidance
+- Runs offline; setup steps in [lm_studio_setup.md](lm_studio_setup.md)
+
+---
+
+## System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    DATA PIPELINE                             │
-│  Raw CSV → Feature Engineering → Train/Test Split            │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────────────────┐
-│                  ML MODELING LAYER                           │
-│  XGBoost (CPU) → Optuna Tuning → 94.2% Accuracy             │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────────────────┐
-│              EXPLAINABILITY LAYER                            │
-│  ┌──────────────┐  ┌──────────────┐  ┌─────────────┐       │
-│  │ SHAP         │  │ DiCE         │  │ LLM (Qwen)  │       │
-│  │ (Why churn?) │  │ (How to fix?)│  │ (Synthesize)│       │
-│  └──────────────┘  └──────────────┘  └─────────────┘       │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────────────────────┐
-│              PRESENTATION LAYER                              │
-│              Streamlit Dashboard                             │
-│  ┌──────────┐ ┌──────────┐ ┌────────────────┐             │
-│  │Portfolio │ │Customer  │ │Retention       │             │
-│  │Overview  │ │Deep Dive │ │Simulator       │             │
-│  └──────────┘ └──────────┘ └────────────────┘             │
-└─────────────────────────────────────────────────────────────┘
++-------------------------------------------------------------+
+|                        DATA PIPELINE                        |
+|     Raw CSV -> Feature Engineering -> Train/Test Split      |
++------------------------------+------------------------------+
+                               |
+                               v
++-------------------------------------------------------------+
+|                       ML MODELING LAYER                     |
+|       Scaling -> SMOTE (train only) -> XGBoost classifier   |
++------------------------------+------------------------------+
+                               |
+                               v
++-------------------------------------------------------------+
+|                     EXPLAINABILITY LAYER                    |
+|  +--------------+  +---------------+  +------------------+  |
+|  | SHAP         |  | DiCE          |  | LLM (Qwen3-4B)   |  |
+|  | why churn?   |  | what to change|  | synthesize       |  |
+|  +--------------+  +---------------+  +------------------+  |
++------------------------------+------------------------------+
+                               |
+                               v
++-------------------------------------------------------------+
+|                     PRESENTATION LAYER                      |
+|                     Streamlit dashboard                     |
+|  +-----------+  +---------------+  +--------------------+   |
+|  | Churn     |  | Customer      |  | Retention          |   |
+|  | Dashboard |  | Deep Dive     |  | Simulator          |   |
+|  +-----------+  +---------------+  +--------------------+   |
++-------------------------------------------------------------+
 ```
 
 ---
 
-## 🛠️ Technology Stack
+## Methodology
 
-### **Core ML & Data Science**
-- **Python 3.9+**: Primary language
-- **Pandas**: Data manipulation (336K+ rows, 28 features)
-- **NumPy**: Numerical computing
-- **Scikit-learn**: Preprocessing, evaluation
-- **XGBoost**: Gradient boosting (94.2% accuracy)
-- **Optuna**: Hyperparameter optimization
+### 1. Data preprocessing and feature engineering
+- Dropped identifiers and high-cardinality or leakage-prone columns (IDs, dates, city, county)
+- Median imputation for numeric columns, mode imputation for categorical columns
+- Label encoding for categoricals; `StandardScaler` fit on the training split only
+- Engineered features include `premium_to_income_ratio`, `monthly_premium`, `premium_affordability`, `tenure_years`, `age_group`, `income_bracket` and a composite `customer_quality_score`
 
-### **Explainable AI**
-- **SHAP (SHapley Additive exPlanations)**: Model interpretability
-- **DiCE-ML**: Diverse Counterfactual Explanations
-- **Matplotlib/Seaborn**: Visualizations
+### 2. Modeling
+- Stratified 80/20 train/test split (`random_state=42`)
+- SMOTE applied to the training split only, to address class imbalance without contaminating the test set
+- XGBoost classifier, trained on GPU when CUDA is available and on CPU otherwise
+- Evaluation on the untouched test set: accuracy, precision, recall, F1, ROC-AUC, confusion matrix, ROC curve
 
-### **LLM Integration**
-- **LM Studio**: Local LLM inference
-- **Qwen 2.5 (3B)**: Language model for insights
-- **Requests**: API communication
+### 3. SHAP explainability
+- Global: mean absolute SHAP ranking and summary plots across the portfolio
+- Local: per-customer waterfall plots and top-factor tables, rendered on demand in the dashboard
 
-### **Dashboard & UI**
-- **Streamlit**: Interactive web interface
-- **Custom CSS**: Professional styling
+### 4. DiCE counterfactuals
+- **Actionable features:** `curr_ann_amt`, `monthly_premium`, `premium_to_income_ratio`, `premium_affordability`
+- **Immutable features:** demographics, tenure, location, income, education, credit and customer history
+- **Constraints:** premium may only decrease, to at most a 50% discount; three diverse counterfactuals; desired outcome is retention (`Churn = 0`)
 
-### **Development Tools**
-- **Joblib**: Model serialization
-- **Git**: Version control
+### 5. LLM synthesis
+SHAP drivers and global context are formatted into a structured prompt that asks the model for a persona, a short explanation of the risk, concrete retention actions and a nudge recommendation with a message template.
 
 ---
 
-## 📦 Installation
+## Technology Stack
 
-### **Prerequisites**
+| Area | Tools |
+|------|-------|
+| Data and ML | Python, Pandas, NumPy, Scikit-learn, imbalanced-learn (SMOTE), XGBoost |
+| Explainability | SHAP, DiCE-ML, Matplotlib, Seaborn |
+| LLM | LM Studio (OpenAI-compatible local server), Qwen3-4B-Thinking, Requests |
+| Dashboard | Streamlit with custom CSS |
+| Tooling | Joblib (artifact serialization), Git |
+
+---
+
+## Installation
+
+### Prerequisites
+- Python 3.9 or newer
+- Optional: an NVIDIA GPU with CUDA for faster XGBoost training (the pipeline falls back to CPU automatically)
+- Optional: [LM Studio](https://lmstudio.ai/) for LLM-generated insights
+
+### Setup
 
 ```bash
-# Check Python version (3.9+ required)
-python --version
+git clone https://github.com/IamSid44/IntelliStay-Megathon-25.git
+cd IntelliStay-Megathon-25
 
-# Check pip
-pip --version
-```
-
-### **Step 1: Clone Repository**
-
-```bash
-https://github.com/Geekonatrip123/Megathon.git
-cd Megathon
-```
-
-### **Step 2: Create Virtual Environment**
-
-```bash
-# Create virtual environment
 python -m venv venv
-
-# Activate it
 # Windows:
 venv\Scripts\activate
-
 # macOS/Linux:
 source venv/bin/activate
-```
 
-### **Step 3: Install Dependencies**
-
-```bash
-# Install all required packages
 pip install -r requirements.txt
 ```
 
-**requirements.txt:**
-```txt
-# Core Data Science
-pandas==2.0.3
-numpy==1.24.3
-scikit-learn==1.3.0
+### Data and artifacts
 
-# Machine Learning
-xgboost==2.0.3
-optuna==3.3.0
+The raw dataset (roughly 336,000 rows, key columns `individual_id` and `Churn`), the engineered CSV and the trained `.pkl` artifacts are too large for the repository. Download them from [this Google Drive folder](https://drive.google.com/drive/folders/16kiTYnvHENG4nyMVJsIt0IXIahScT62D?usp=sharing) and place them in the project root.
 
-# Explainable AI
-shap==0.42.1
-dice-ml==0.11
+### LLM setup (optional)
 
-# Visualization
-matplotlib==3.7.2
-seaborn==0.12.2
-
-# Dashboard
-streamlit==1.28.0
-
-# Utilities
-joblib==1.3.2
-requests==2.31.0
-```
-
-### **Step 4: Download Dataset**
-
-```bash
-# Place your dataset in the project root
-You can download all the csv and pkl files from here :-https://drive.google.com/drive/folders/16kiTYnvHENG4nyMVJsIt0IXIahScT62D?usp=sharing 
-
-```
-
-**Dataset Requirements:**
-- Format: CSV
-- Size: ~336,000 rows
-- Key columns: `individual_id`, `Churn`, demographics, premium info
-
-### **Step 5: Setup LM Studio (Optional but Recommended)**
-
-1. **Download LM Studio**: [https://lmstudio.ai/](https://lmstudio.ai/)
-2. **Install Qwen** from the model library
-3. **Start Local Server**:
-   - Open LM Studio
-   - Load Qqwen/qwen3-4b-thinking-2507
-   - Click "Start Server" (default: `localhost:1234`)
+Follow [lm_studio_setup.md](lm_studio_setup.md) to load `qwen/qwen3-4b-thinking-2507` and start the local server on `localhost:1234`. Without it, the dashboard uses rule-based fallback insights.
 
 ---
 
-## 🚀 Usage Guide
+## Usage
 
-### **Full Pipeline Execution**
-
-Run all scripts in sequence:
+### Full pipeline
 
 ```bash
-# 1. Data preprocessing & feature engineering
-python 01_eda_and_preprocessing.py
-
-# 2. Model training & evaluation
-python 02_modeling_pipeline.py
-
-# 3. SHAP explainability analysis
-python 03_shap_explainability_with_llm.py
-
-# 4. DiCE counterfactual generation (optional)
-python dice_counterfactuals.py
-
-# 5. Launch dashboard
-streamlit run 04_dashboard.py
+python 01_eda_and_preprocessing.py          # EDA, cleaning, feature engineering
+python 02_modeling_pipeline.py              # scaling, SMOTE, XGBoost training, evaluation
+python 03_shap_explainability_with_llm.py   # SHAP analysis and LLM insights
+python dice_counterfactuals.py              # DiCE setup (optional)
+streamlit run 04_dashboard.py               # launch the dashboard
 ```
 
-### **Quick Start (Pre-trained Model)**
+### Quick start with pre-trained artifacts
 
-If you have pre-trained models:
+Place the downloaded files in the project root and run `streamlit run 04_dashboard.py`. Required files:
 
-```bash
-# Just launch the dashboard
-streamlit run 04_dashboard.py
-```
-
-Required files in project root:
 - `final_xgboost_model.pkl`
 - `scaler.pkl`
 - `feature_names.pkl`
+- `label_encoders.pkl`
 - `shap_data_package.pkl`
 - `shap_explainer.pkl`
 - `test_data_with_predictions.csv`
 - `shap_global_importance.csv`
 
-### **Dashboard Navigation**
+### Dashboard navigation
 
-1. **Portfolio Overview** (`📊 Churn Dashboard`)
-   - View global metrics
-   - Identify high-risk customers
-   - Analyze top churn drivers
-
-2. **Customer Deep Dive** (`🔍 Customer Deep Dive`)
-   - Search by Customer ID or Risk Level
-   - Click "ANALYZE CUSTOMER"
-   - View SHAP explanation + AI insights + DiCE strategies
-
-3. **Retention Simulator** (`⚙️ Retention Simulator`)
-   - Select customer
-   - Adjust annual premium slider
-   - Click "RUN SIMULATION"
-   - View predicted impact
+1. **Churn Dashboard**: portfolio metrics, risk distribution, global drivers, highest-risk customers.
+2. **Customer Deep Dive**: choose a customer by ID or risk level, then run the analysis to see the SHAP explanation, LLM insights and DiCE strategies.
+3. **Retention Simulator**: select a customer, adjust the annual premium, and run the simulation to see the predicted impact.
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
-Megathon/
-│
-├── 01_eda_and_preprocessing.py       # Data cleaning & feature engineering
-├── 02_modeling_pipeline.py           # Model training & evaluation
-├── 03_shap_explainability_with_llm.py # SHAP analysis & LLM integration
-├── dice_counterfactuals.py           # DiCE counterfactual generation
-├── 04_dashboard.py                   # Streamlit interactive dashboard
-│
-├── llm_utils.py                      # LLM helper functions
-├── requirements.txt                  # Python dependencies
-├── README.md                         # This file
-│
-├── autoinsurance_churn.csv           # Raw dataset (input)
-├── autoinsurance_churn_engineered.csv # Processed dataset
-│
-├── final_xgboost_model.pkl           # Trained XGBoost model
-├── scaler.pkl                        # StandardScaler for features
-├── feature_names.pkl                 # List of feature names
-├── label_encoders.pkl                # Categorical encoders
-│
-├── shap_explainer.pkl                # SHAP explainer object
-├── shap_data_package.pkl             # SHAP values & customer data
-├── shap_global_importance.csv        # Global feature importance
-│
-├── dice_explainer.pkl                # DiCE explainer (optional)
-├── test_data_with_predictions.csv    # Test set with predictions
-│
-├── results/                          # Generated plots
-│   ├── shap_summary_plot.png
-│   ├── shap_feature_importance_bar.png
-│   ├── confusion_matrix.png
-│   ├── roc_curve.png
-│   └── feature_importance.png
-│
-└── shap_force_plots/                 # Individual SHAP plots
-    └── shap_waterfall_customer_*.png
+IntelliStay-Megathon-25/
+|-- 01_eda_and_preprocessing.py           # Cleaning and feature engineering
+|-- 02_modeling_pipeline.py               # SMOTE, XGBoost training, evaluation
+|-- 03_shap_explainability_with_llm.py    # SHAP analysis and LLM insights
+|-- dice_counterfactuals.py               # DiCE counterfactual generation
+|-- 04_dashboard.py                       # Streamlit dashboard
+|-- llm_utils.py                          # LM Studio client and SHAP plot helpers
+|-- lm_studio_setup.md                    # Local LLM setup guide
+|-- requirements.txt
+|-- Solution Presentation.pdf             # Hackathon solution deck
+|-- Dashboard.png                         # Dashboard screenshot
+|-- original_data_visualisation/          # EDA plots, confusion matrix
+|-- results/                              # Model and SHAP result plots
+`-- shap_force_plots/                     # Per-customer SHAP waterfalls
 ```
 
----
-
-## 🔬 Methodology
-
-### **1. Data Preprocessing**
-
-**Feature Engineering:**
-- `premium_to_income_ratio = curr_ann_amt / income`
-- `monthly_premium = curr_ann_amt / 12`
-- `premium_affordability = (premium / income) * 100`
-- `tenure_years = days_tenure / 365`
-- `age_group` (binning)
-- `income_bracket` (categorical)
-- `customer_quality_score` (composite)
-
-**Handling Missing Values:**
-- Numerical: Median imputation
-- Categorical: Mode imputation
-
-**Encoding:**
-- Label Encoding for categorical features
-- StandardScaler for numerical features
-
-### **2. Model Training**
-
-**Algorithm:** XGBoost Classifier
-
-**Hyperparameter Optimization (Optuna):**
-- 100 trials
-- Objective: Maximize F1-score
-- Cross-validation: 5-fold
-
-**Best Parameters:**
-```python
-{
-    'max_depth': 6,
-    'learning_rate': 0.1,
-    'n_estimators': 200,
-    'subsample': 0.8,
-    'colsample_bytree': 0.8,
-    'scale_pos_weight': 3.5
-}
-```
-
-### **3. SHAP Explainability**
-
-**Global Interpretation:**
-- Feature importance rankings
-- Impact direction (positive/negative)
-- Summary plots across all customers
-
-**Local Interpretation:**
-- Waterfall plots for individual customers
-- Top 5 risk factors per customer
-- Expected value vs actual prediction
-
-**Top Global Churn Drivers:**
-1. `days_tenure` (low tenure = high risk)
-2. `length_of_residence`
-3. `home_market_value`
-4. `age_in_years`
-5. `curr_ann_amt` (high premium = high risk)
-
-### **4. DiCE Counterfactuals**
-
-**Actionable Features** (can be changed):
-- `curr_ann_amt` (annual premium)
-- `monthly_premium` (derived)
-- `premium_to_income_ratio`
-- `premium_affordability`
-
-**Immutable Features** (cannot be changed):
-- Demographics: age, marital status, children
-- Location: state, latitude, longitude
-- History: tenure, origin date
-- Background: income, education, credit
-
-**Constraints:**
-- Premium can only decrease (discounts, not increases)
-- Maximum 50% discount
-- Minimum 3 diverse counterfactuals
-- Desired outcome: Churn = 0 (retention)
-
-### **5. Behavioral Nudges**
-
-**Nudge Categories & Application:**
-
-| Nudge Type | Psychology Principle | When to Use | Example |
-|------------|---------------------|-------------|---------|
-| **Loss Aversion** | People hate losing more than gaining | High tenure customers | "Lose $847 accident-free bonus" |
-| **Social Proof** | Follow peer behavior | Average customers | "92% in your area renewed" |
-| **Reciprocity** | Return favors | Price-sensitive | "Free vehicle check-up" |
-| **Commitment** | Lock in decisions | Risk-averse | "Lock rate for 2 years" |
-| **Scarcity** | Fear of missing out | Fence-sitters | "Expires in 48 hours" |
-| **Anchoring** | Reference point bias | Long tenure | "Saved $2,340 over 3 years" |
+Datasets and `.pkl` artifacts are generated by the pipeline or downloaded (see [Installation](#installation)) and are git-ignored.
 
 ---
 
-## 📊 Results
+## Limitations and Future Work
 
-### **Model Performance**
+Known limitations:
 
-| Metric    | Value    |
-|-----------|---------:|
-| Accuracy  | 0.883292 |
-| Precision | 0.490100 |
-| Recall    | 0.348040 |
-| F1-Score  | 0.407031 |
-| ROC-AUC   | 0.694800 |
+- **Modest discrimination.** Recall of 0.35 and ROC-AUC of 0.695 mean the model is a prioritization aid, not a precise predictor.
+- **Target-derived feature.** `state_churn_rate` is computed from the full dataset before the train/test split, so test-set metrics may be optimistic. Recomputing it from training data only is the first planned fix.
+- **Uncalibrated probabilities.** Training on SMOTE-resampled data shifts predicted probabilities upward; risk thresholds (40% and 70%) are heuristic until the model is calibrated.
+- **Simplified business metrics.** Revenue at risk uses a flat assumed average premium rather than per-customer premiums.
 
-### **Business Impact**
+Planned work:
 
-**Portfolio Metrics:**
-- Total Customers: 336,182
-- High Risk (>70%): 1,472 (0.4%)
-- Medium Risk (40-70%): 31,591 (9.4%)
-- Low Risk (<40%): 303,119 (90.2%)
-
-### **Sample Success Case**
-
-**Customer ID: 63533**
-- Original Churn Risk: 91.0%
-- Top Risk Factor: `days_tenure` (low)
-- DiCE Recommendation: Reduce premium by 25%
-- New Churn Risk: 32.4%
-- **Risk Reduction: 58.6%** 
+- Fix the `state_churn_rate` leakage and add probability calibration
+- Time-based validation and cost-sensitive threshold selection
+- A/B testing of nudge messaging against discount-only offers
+- Serving the model behind an API and logging outcomes for feedback
 
 ---
 
-## 🎓 Key Learnings
-
-### **Technical Insights**
-1. **SHAP > Feature Importance**: SHAP provides direction and magnitude
-2. **DiCE Constraints Critical**: Without proper constraints, recommendations are unrealistic
-3. **Local LLM Viable**: 3B parameter models sufficient for synthesis tasks
-4. **CPU vs GPU**: For inference, CPU is more stable in production
-
-### **Business Insights**
-1. **Tenure ≠ Loyalty**: Low tenure is #1 churn driver
-2. **Premium Sweet Spot**: 20-30% discount optimal for retention
-3. **Behavioral Nudges Work**: 15-20% better than pure discounts
-4. **Timing Matters**: 30-60 days before renewal is key window
-
----
-
-**Built with ❤️ for Megathon'25**
-
-*"From prediction to action - AI that retains customers"*
+*From prediction to action: AI that retains customers.*
